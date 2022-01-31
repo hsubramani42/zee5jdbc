@@ -16,7 +16,7 @@ public interface UserRepository {
 
 	public String addUser(Register register);
 
-	public Optional<Register> getUserById(String id) throws IdNotFoundException, SQLException, InvalidIdLengthException,
+	public Optional<Register> getUserById(String id) throws IdNotFoundException, InvalidIdLengthException,
 			InvalidNameException, InvalidEmailFormatException, InvalidPasswordException;
 
 	public Optional<List<Register>> getAllUsersList()

@@ -8,11 +8,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 import javax.naming.InvalidNameException;
 
 import com.zee.zee5app.dto.Login;
 import com.zee.zee5app.dto.Register;
+import com.zee.zee5app.dto.enums.ROLE;
 import com.zee.zee5app.exception.IdNotFoundException;
 import com.zee.zee5app.exception.InvalidEmailFormatException;
 import com.zee.zee5app.exception.InvalidIdLengthException;
@@ -23,16 +25,16 @@ import com.zee.zee5app.utils.DBUtils;
 import com.zee.zee5app.utils.PasswordUtils;
 
 public class UserRepositoryImpl implements UserRepository {
-	static private UserRepositoryImpl repo = null;
+	static private UserRepository repo = null;
 	static private DBUtils dbutils = null;
-	static private LoginRepositoryImpl loginRepository = null;
+	static private LoginRepository loginRepository = null;
 
 	private UserRepositoryImpl() throws IOException {
 		loginRepository = LoginRepositoryImpl.getInstance();
 		dbutils = DBUtils.getInstance();
 	}
 
-	public static UserRepositoryImpl getInstance() throws IOException {
+	public static UserRepository getInstance() throws IOException {
 
 		if (repo == null)
 			repo = new UserRepositoryImpl();
@@ -58,14 +60,10 @@ public class UserRepositoryImpl implements UserRepository {
 			prepStatement.setString(6, encryptPassword);
 			int result = prepStatement.executeUpdate();
 			if (result > 0) {
-				Login login = new Login(register.getEmail(), encryptPassword, register.getId());
-				String status = loginRepository.addCredentials(login);
-				if (status.equals("success")) {
-					return "success";
-				} else {
-					connection.rollback();
-					return "fail";
-				}
+				Login login = new Login(register.getEmail(), encryptPassword, register.getId(),
+						ROLE.values()[new Random().nextInt(2)]);
+				return loginRepository.addCredentials(login);
+
 			} else {
 				connection.rollback();
 				return "fail";
@@ -88,6 +86,7 @@ public class UserRepositoryImpl implements UserRepository {
 	@Override
 	public Optional<Register> getUserById(String id) throws InvalidNameException, IdNotFoundException,
 			InvalidIdLengthException, InvalidEmailFormatException, InvalidPasswordException {
+
 		Connection connection = dbutils.getConnection();
 
 		String getQuery = "SELECT * FROM register where regId=?";
@@ -178,7 +177,6 @@ public class UserRepositoryImpl implements UserRepository {
 			try {
 				connection.rollback();
 			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 			e.printStackTrace();
@@ -190,8 +188,39 @@ public class UserRepositoryImpl implements UserRepository {
 
 	@Override
 	public String updateUserById(String id, Register register) throws IdNotFoundException {
-		// TODO Auto-generated method stub
-		return null;
+		Connection connection = dbutils.getConnection();
+		String updateQuery = "UPDATE register SET firstname=?, lastname=?, email=?, contactnumber=?, password=? WHERE regid=?";
+		try {
+			PreparedStatement prepStatement = connection.prepareStatement(updateQuery);
+			prepStatement.setString(6, register.getId());
+			prepStatement.setString(1, register.getFirstName());
+			prepStatement.setString(2, register.getLastName());
+			prepStatement.setString(3, register.getEmail());
+			prepStatement.setBigDecimal(4, register.getContactNumber());
+			String encryptPassword = PasswordUtils.generateSecurePassword(register.getPassword(),
+					PasswordUtils.getSalt(30));
+			prepStatement.setString(5, encryptPassword);
+			int result = prepStatement.executeUpdate();
+			if (result > 0) {
+				connection.commit();
+				return "success";
+
+			} else {
+				connection.rollback();
+				throw new IdNotFoundException("Invalid Id");
+			}
+
+		} catch (SQLException e) {
+			try {
+				connection.rollback();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+			e.printStackTrace();
+		} finally {
+			dbutils.closeConnection(connection);
+		}
+		return "fail";
 	}
 
 }

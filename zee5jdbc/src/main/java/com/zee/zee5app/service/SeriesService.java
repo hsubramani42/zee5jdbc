@@ -5,8 +5,7 @@ import java.util.Optional;
 
 import com.zee.zee5app.dto.Series;
 import com.zee.zee5app.exception.IdNotFoundException;
-import com.zee.zee5app.exception.LocationNotFoundException;
-import com.zee.zee5app.exception.NameNotFoundException;
+import com.zee.zee5app.exception.InvalidIdLengthException;
 
 public interface SeriesService {
 	public String addSeries(Series series);
@@ -15,13 +14,9 @@ public interface SeriesService {
 
 	public String deleteSeriesById(String id) throws IdNotFoundException;
 
-	public Optional<Series> getSeriesById(String id) throws IdNotFoundException;
+	public Optional<Series> getSeriesById(String id) throws IdNotFoundException, InvalidIdLengthException;
 
-	public List<Series> getAllSeriesList();
+	public List<Series> getAllSeriesList() throws InvalidIdLengthException;
 	
-	public Series[] getAllSeries();
-	
-	public Optional<Series> getSeriesByLocation(String location) throws LocationNotFoundException;
-	
-	public List<Series> getSeriesByName(String name) throws NameNotFoundException;
+	public Series[] getAllSeries() throws InvalidIdLengthException;
 }

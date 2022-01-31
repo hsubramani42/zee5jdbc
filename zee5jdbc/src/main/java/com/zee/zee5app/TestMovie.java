@@ -1,14 +1,15 @@
 package com.zee.zee5app;
 
+import java.io.IOException;
 import java.util.Date;
-import java.util.List;
 import java.util.Random;
 
 import com.zee.zee5app.dto.Movie;
+import com.zee.zee5app.dto.enums.GENRE;
+import com.zee.zee5app.dto.enums.LANGUAGE;
 import com.zee.zee5app.exception.IdNotFoundException;
 import com.zee.zee5app.exception.InvalidIdLengthException;
 import com.zee.zee5app.exception.InvalidNameException;
-import com.zee.zee5app.exception.LocationNotFoundException;
 import com.zee.zee5app.exception.NameNotFoundException;
 import com.zee.zee5app.service.MovieService;
 import com.zee.zee5app.service.impl.MovieServiceImpl;
@@ -17,119 +18,93 @@ public class TestMovie {
 
 	public static void main(String[] args) {
 
-		MovieService movieService = MovieServiceImpl.getInstance();
-		String movieNames[] = { "A", "B", "C", "D", "E" };
-		String catNames[] = { "1", "2", "3", "4", "5" };
-		String language[] = { "Tel", "Tam", "Hin", "Eng", "Kan" };
-		Random rand = new Random();
-		for (int i = 0; i < 10; i++) {
+		MovieService movieService = null;
 
-			try {
-				Movie movie = new Movie(movieNames[rand.nextInt(4)], catNames[rand.nextInt(4)],
-						new Date(), "trailer-" + i, language[rand.nextInt(4)],
-						new String[] { "cast-1", "cat-2" }, 200, "00000000" + i, "D:\\Personal\\" + i + ".mp4");
-				movieService.addMovie(movie);
-			} catch (InvalidNameException | InvalidIdLengthException e) {
-				e.printStackTrace();
-			}
+		try {
+			movieService = MovieServiceImpl.getInstance();
+		} catch (IOException e2) {
+			e2.printStackTrace();
+		}
+
+		String movieNames[] = { "A", "B", "C", "D", "E" };
+		Random rand = new Random();
+		System.out.print("Adding MOV0000010: ");
+		try {
+			Movie movie = new Movie("MOV0000010", movieNames[rand.nextInt(5)], rand.nextInt(12, 21),
+					GENRE.values()[rand.nextInt(6)], rand.nextInt(6000, 11000), new Date(),
+					new String[] { "cast-1", "cat-2" }, LANGUAGE.values()[rand.nextInt(5)],
+					"https://www.youtube.com/watch?v=Gq" + rand.nextInt(10, 1000000));
+			System.out.println(movieService.addMovie(movie));
+		} catch (InvalidNameException | InvalidIdLengthException e) {
+			e.printStackTrace();
 		}
 
 		Movie movieRef = null;
-		// Invalid Id
+
+		// Valid Object
 		try {
-			movieRef = new Movie(movieNames[rand.nextInt(4)], catNames[rand.nextInt(4)],
-					new Date(), "trailer-Updated", language[rand.nextInt(4)],
-					new String[] { "cast-1", "cat-2" }, 200, "000122", "D:\\Personal\\122.mp4");
+			movieRef = new Movie("MOV0000010", movieNames[rand.nextInt(5)], rand.nextInt(12, 21),
+					GENRE.values()[rand.nextInt(4)], rand.nextInt(6000, 11000), new Date(),
+					new String[] { "cast-1", "cat-2" }, LANGUAGE.values()[rand.nextInt(4)],
+					"https://www.youtube.com/watch?v=Gq" + rand.nextInt(10, 1000000));
 		} catch (InvalidNameException | InvalidIdLengthException e) {
 			e.printStackTrace();
 		}
 
-		// Invalid Name
+		// Checking the
+		System.out.print("Checking MOV0000010: ");
 		try {
-			movieRef = new Movie("", catNames[rand.nextInt(4)], new Date(), "trailer-Updated",
-					language[(int) Math.random() * 4], new String[] { "cast-1", "cat-2" }, 200, "000122",
-					"D:\\Personal\\122.mp4");
-		} catch (InvalidNameException | InvalidIdLengthException e) {
+			System.out.println(movieService.getMovieById("MOV0000010").isPresent());
+		} catch (IdNotFoundException | InvalidIdLengthException | InvalidNameException e) {
 			e.printStackTrace();
 		}
-		
-		//Valid Object
+
+		// Updating the object
+		System.out.print("Updating MOV0000010: ");
 		try {
-			movieRef = new Movie(movieNames[rand.nextInt(4)], catNames[rand.nextInt(4)],
-					new Date(), "trailer-Updated", language[rand.nextInt(4)],
-					new String[] { "cast-1", "cat-2" }, 200, "000000122", "D:\\Personal\\122.mp4");
-		} catch (InvalidNameException | InvalidIdLengthException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		//Updating the object
-		System.out.print("Updating 000000001: ");
-		try {
-			System.out.println(movieService.updateMovieById("00000000"+1, movieRef));
+			System.out.println(movieService.updateMovieById("MOV0000010", movieRef));
 		} catch (IdNotFoundException e) {
 			e.printStackTrace();
 		}
-		
-		//Deleting the object
-		System.out.print("Deleting 000000122: ");
+
+		// Deleting the object
+		System.out.print("Deleting MOV0000010: ");
 		try {
-			System.out.println(movieService.deleteMovieById("000000122"));
+			System.out.println(movieService.deleteMovieById("MOV0000010"));
 		} catch (IdNotFoundException e) {
 			e.printStackTrace();
 		}
-		
-		//Checking the 
-		System.out.println("Checking 000000122: ");
+
+		// Checking the
+		System.out.println("Checking MOV0000010: ");
 		try {
-			System.out.println(movieService.getMovieById("000000122"));
-		} catch (IdNotFoundException e) {
+			System.out.println(movieService.getMovieById("MOV0000010"));
+		} catch (IdNotFoundException | InvalidIdLengthException | InvalidNameException e) {
 			e.printStackTrace();
 		}
-		System.out.println("Checking 000000002: ");
-		try {
-			System.out.println(movieService.getMovieById("000000002"));
-		} catch (IdNotFoundException e) {
-			e.printStackTrace();
-		}
-		
+
 		System.out.println("Movies List: ");
-		movieService.getAllMoviesList().forEach(movie -> System.out.println(movie));
-		
+		try {
+			movieService.getAllMoviesList().forEach(movie -> System.out.println(movie));
+		} catch (InvalidIdLengthException | InvalidNameException e1) {
+			e1.printStackTrace();
+		}
+
 		System.out.println("Movies Array: ");
-		for(Movie movie : movieService.getAllMovie())
-			System.out.println(movie);
-		
-		System.out.print("Check location "+"D:\\Personal\\" + 2 +" :");
 		try {
-			System.out.println(movieService.getMovieByLocation("D:\\Personal\\2.mp4"));
-		} catch (LocationNotFoundException e) {
-			e.printStackTrace();
+			for (Movie movie : movieService.getAllMovie())
+				System.out.println(movie);
+		} catch (InvalidIdLengthException | InvalidNameException e1) {
+			e1.printStackTrace();
 		}
-		
-		System.out.print("Check location "+"D:\\Personal\\" + 200 +" :");
+
+		System.out.println("Movies with Name 83: ");
 		try {
-			System.out.println(movieService.getMovieByLocation("D:\\Personal\\200.mp4"));
-		} catch (LocationNotFoundException e) {
-			e.printStackTrace();
+			movieService.getMovieByName("83").forEach(movie -> System.out.println(movie));
+		} catch (InvalidIdLengthException | InvalidNameException | NameNotFoundException e1) {
+			e1.printStackTrace();
 		}
-		System.out.println("Check \"A Movie\": ");
-		try {
-			List<Movie> result = movieService.getMovieByName("A");
-			result.forEach(movie -> System.out.println(movie));
-		} catch (NameNotFoundException e) {
-			e.printStackTrace();
-		}
-		
-		System.out.println("Check \"Z Movie\": ");
-		try {
-			List<Movie> result = movieService.getMovieByName("Z");
-			result.forEach(movie -> System.out.println(movie));
-		} catch (NameNotFoundException e) {
-			e.printStackTrace();
-		}
-		
-	
+
 	}
 
 }

@@ -8,14 +8,14 @@ import com.zee.zee5app.exception.IdNotFoundException;
 import com.zee.zee5app.exception.InvalidEmailFormatException;
 import com.zee.zee5app.exception.InvalidIdLengthException;
 import com.zee.zee5app.exception.InvalidPasswordException;
-import com.zee.zee5app.service.impl.UserServiceimpl;
+import com.zee.zee5app.service.impl.UserServiceImpl;
 
 public class Main {
 
 	public static void main(String[] args) {
 		Register register = null;
 		try {
-			register = new Register("000001", "Subramani", "Harisankar", "hsubramani42@gmail.com", "password");
+			//register = new Register("000001", "Subramani", "Harisankar", "hsubramani42@gmail.com", "password");
 			System.out.println("Register Object: " + register);
 		} catch (InvalidIdLengthException e) {
 			e.printStackTrace();
@@ -34,7 +34,7 @@ public class Main {
 
 		System.out.println("Login Object: " + login);
 
-		UserServiceimpl userService = UserServiceimpl.getInstance();
+		UserServiceImpl userService = UserServiceImpl.getInstance();
 		int i = 1;
 		for (; i <= 10; i++) {
 			register = new Register();

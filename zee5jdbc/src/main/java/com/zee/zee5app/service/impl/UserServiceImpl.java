@@ -11,22 +11,23 @@ import com.zee.zee5app.exception.IdNotFoundException;
 import com.zee.zee5app.exception.InvalidEmailFormatException;
 import com.zee.zee5app.exception.InvalidIdLengthException;
 import com.zee.zee5app.exception.InvalidPasswordException;
+import com.zee.zee5app.repository.UserRepository;
 import com.zee.zee5app.repository.impl.UserRepositoryImpl;
 import com.zee.zee5app.service.UserService;
 
-public class UserServiceimpl implements UserService {
+public class UserServiceImpl implements UserService {
 
-	private static UserRepositoryImpl userRepository = null;
-	private static UserServiceimpl service = null;
+	private UserRepository userRepository = null;
+	private static UserServiceImpl service = null;
 
-	private UserServiceimpl() throws IOException {
+	private UserServiceImpl() throws IOException {
 		userRepository = UserRepositoryImpl.getInstance();
 	}
 
-	public static UserServiceimpl getInstance() throws IOException {
+	public static UserServiceImpl getInstance() throws IOException {
 
 		if (service == null)
-			service = new UserServiceimpl();
+			service = new UserServiceImpl();
 		return service;
 
 	}

@@ -1,24 +1,27 @@
 package com.zee.zee5app.service.impl;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 import com.zee.zee5app.dto.Movie;
 import com.zee.zee5app.exception.IdNotFoundException;
-import com.zee.zee5app.exception.LocationNotFoundException;
+import com.zee.zee5app.exception.InvalidIdLengthException;
+import com.zee.zee5app.exception.InvalidNameException;
 import com.zee.zee5app.exception.NameNotFoundException;
+import com.zee.zee5app.repository.MovieRepository;
 import com.zee.zee5app.repository.impl.MovieRepositoryImpl;
 import com.zee.zee5app.service.MovieService;
 
 public class MovieServiceImpl implements MovieService {
-	private MovieRepositoryImpl movieRepository = MovieRepositoryImpl.getInstance();
-	private static MovieServiceImpl movieService = null;
+	private MovieRepository movieRepository = null;
+	private static MovieService movieService = null;
 
-	private MovieServiceImpl() {
-
+	private MovieServiceImpl() throws IOException {
+		movieRepository = MovieRepositoryImpl.getInstance();
 	}
 
-	public static MovieServiceImpl getInstance() {
+	public static MovieService getInstance() throws IOException {
 		if (movieService == null)
 			movieService = new MovieServiceImpl();
 		return movieService;
@@ -40,27 +43,24 @@ public class MovieServiceImpl implements MovieService {
 	}
 
 	@Override
-	public Optional<Movie> getMovieById(String id) throws IdNotFoundException {
+	public Optional<Movie> getMovieById(String id)
+			throws IdNotFoundException, InvalidIdLengthException, InvalidNameException {
 		return this.movieRepository.getMovieById(id);
 	}
 
 	@Override
-	public List<Movie> getAllMoviesList() {
+	public List<Movie> getAllMoviesList() throws InvalidIdLengthException, InvalidNameException {
 		return this.movieRepository.getAllMoviesList();
 	}
 
 	@Override
-	public Movie[] getAllMovie() {
+	public Movie[] getAllMovie() throws InvalidIdLengthException, InvalidNameException {
 		return this.movieRepository.getAllMovie();
 	}
 
 	@Override
-	public Optional<Movie> getMovieByLocation(String location) throws LocationNotFoundException {
-		return this.movieRepository.getMovieByLocation(location);
-	}
-
-	@Override
-	public List<Movie> getMovieByName(String name) throws NameNotFoundException {
+	public List<Movie> getMovieByName(String name)
+			throws NameNotFoundException, InvalidIdLengthException, InvalidNameException {
 		return this.movieRepository.getMovieByName(name);
 	}
 

@@ -1,43 +1,47 @@
 package com.zee.zee5app.dto;
 
-import java.util.Arrays;
 import java.util.Date;
-import java.util.Objects;
 
+import com.zee.zee5app.dto.enums.GENRE;
+import com.zee.zee5app.dto.enums.LANGUAGE;
 import com.zee.zee5app.exception.InvalidIdLengthException;
 import com.zee.zee5app.exception.InvalidNameException;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 @Getter
 @NoArgsConstructor
-//@EqualsAndHashCode
+@Setter
 @ToString
 public class Movie implements Comparable<Movie> {
 
-	private String name;
-	private String category;
-	private Date releaseDate;
-	private String trailer;
-	private String language;
-	private String cast[];
-	private String location;
-	private int length;
+	@Setter(value = AccessLevel.NONE)
 	private String id;
+	@Setter(value = AccessLevel.NONE)
+	private String name;
+	private int agelimit;
+	private GENRE genre;
+	private int length;
+	private Date releaseDate;
+	private String[] cast;
+	private LANGUAGE language;
+	private String trailer;
 
-	public Movie(String name, String category, Date releaseDate, String trailer, String language, String[] cast,
-			int length, String id, String location) throws InvalidNameException, InvalidIdLengthException {
-		this.setName(name);
-		this.setCategory(category);
-		this.setReleaseDate(releaseDate);
-		this.setTrailer(trailer);
-		this.setLanguage(language);
-		this.setCast(cast);
-		this.setLength(length);
+	public Movie(String id, String name, int agelimit, GENRE genre, int length, Date releaseDate, String[] cast,
+			LANGUAGE language, String trailer) throws InvalidIdLengthException, InvalidNameException {
 		this.setId(id);
-		this.setLocation(location);
+		this.setName(name);
+		this.setAgelimit(agelimit);
+		this.setGenre(genre);
+		this.setLength(length);
+		this.setReleaseDate(releaseDate);
+		this.setCast(cast);
+		this.setLanguage(language);
+		this.setTrailer(trailer);
 	}
 
 	public void setName(String name) throws InvalidNameException {
@@ -46,60 +50,10 @@ public class Movie implements Comparable<Movie> {
 		this.name = name;
 	}
 
-	public void setCategory(String category) {
-		this.category = category;
-	}
-
-	public void setReleaseDate(Date releaseDate) {
-		this.releaseDate = releaseDate;
-	}
-
-	public void setTrailer(String trailer) {
-		this.trailer = trailer;
-	}
-
-	public void setLanguage(String language) {
-		this.language = language;
-	}
-
-	public void setCast(String[] cast) {
-		this.cast = cast;
-	}
-
-	public void setLength(int length) {
-		this.length = length;
-	}
-
 	public void setId(String id) throws InvalidIdLengthException {
 		if ((id == null) || (id.length() < 8))
 			throw new InvalidIdLengthException("Invalid Id length");
 		this.id = id;
-	}
-
-	public void setLocation(String location) {
-		this.location = location;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + Arrays.hashCode(cast);
-		result = prime * result + Objects.hash(category, id, language, length, name, releaseDate, trailer);
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (!(obj instanceof Movie))
-			return false;
-		Movie other = (Movie) obj;
-		return Arrays.equals(cast, other.cast) && Objects.equals(category, other.category)
-				&& Objects.equals(id, other.id) && Objects.equals(language, other.language) && length == other.length
-				&& Objects.equals(name, other.name) && Objects.equals(releaseDate, other.releaseDate)
-				&& Objects.equals(trailer, other.trailer);
 	}
 
 	@Override
