@@ -9,7 +9,6 @@ import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import com.zee.zee5app.Main;
 import com.zee.zee5app.dto.Login;
 import com.zee.zee5app.dto.enums.ROLE;
 import com.zee.zee5app.repository.LoginRepository;
@@ -22,56 +21,45 @@ public class LoginRepositoryImpl implements LoginRepository {
 
 	@Override
 	public String addCredentials(Login login) {
-		Connection conn= null;
-		try {
-			conn= dataSource.getConnection();
-			System.out.println("log: "+conn.hashCode());
-		} catch (SQLException e2) {
-			e2.printStackTrace();
-		}
-		String insertQuery = "insert into login (Username, password, regId, role)" + "values(?,?,?,?)";
-		try {
-			
-			System.out.println("Entered try");
-			PreparedStatement pst = conn.prepareStatement(insertQuery);
 
-			System.out.println("Prep end");
-			pst.setString(1, login.getUserName());
-			pst.setString(2, login.getPassword());
-			pst.setString(3, login.getRegID());
-			pst.setString(4, login.getRole().toString());
-			System.out.println("Before upDate end");
-			boolean result = pst.execute();
-			System.out.println("log state: "+result);
-			if (pst.getUpdateCount() > 0) {
-				System.out.println("log: exe...");
-				conn.commit();
-				
-				System.out.println("log: exeted...");
-				notifyAll();
+		Connection connection = null;
+		PreparedStatement ps = null;
+		try {
+			connection = dataSource.getConnection();
+			String insertQuery = "insert into login (Username, password, regId, role)" + "values(?,?,?,?)";
+			ps = connection.prepareStatement(insertQuery);
+			ps.setString(1, login.getUserName());
+			ps.setString(2, login.getPassword());
+			ps.setString(3, login.getRegID());
+			ps.setString(4, login.getRole().toString());
+			System.out.println("reg hash: " + connection.hashCode());
+			int result = ps.executeUpdate();
+			if (result > 0) {
+				connection.commit();
+				ps.close();
 				return "success";
 			} else {
-				conn.rollback();
+				connection.rollback();
+				ps.close();
 				return "fail";
 			}
-			
 
 		} catch (SQLException e) {
 			try {
-				conn.rollback();
+				connection.rollback();
 			} catch (SQLException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-			e.printStackTrace();
-		}
-		finally {
-			try {
-				conn.close();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			if (ps != null) {
+				try {
+					ps.close();
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			}
+			e.printStackTrace();
 		}
 		return "fail";
 	}
@@ -101,7 +89,6 @@ public class LoginRepositoryImpl implements LoginRepository {
 			try {
 				connection.rollback();
 			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 			e.printStackTrace();

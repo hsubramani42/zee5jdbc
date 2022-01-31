@@ -26,6 +26,7 @@ public class MainSpring {
 
 		 DataSource dataSource=applicationContext.getBean("dataSource", DataSource.class);
 		 
+		 
 		 System.out.println(dataSource!=null);
 		 
 		 try {

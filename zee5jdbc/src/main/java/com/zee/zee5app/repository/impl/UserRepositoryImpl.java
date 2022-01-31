@@ -1,6 +1,5 @@
 package com.zee.zee5app.repository.impl;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,7 +13,6 @@ import javax.naming.InvalidNameException;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
 import com.zee.zee5app.dto.Login;
@@ -44,15 +42,14 @@ public class UserRepositoryImpl implements UserRepository {
 		Connection connection = null;
 		try {
 			connection = dataSource.getConnection();
-			System.out.println("reg: " + connection.hashCode());
 		} catch (SQLException e2) {
-			// TODO Auto-generated catch block
 			e2.printStackTrace();
 		}
 		String insertQuery = "insert into register" + "(regId, firstname, lastname, email, contactnumber, password)"
 				+ "values(?,?,?,?,?,?)";
 		try {
 			PreparedStatement prepStatement = connection.prepareStatement(insertQuery);
+			prepStatement.setPoolable(true);
 			prepStatement.setString(1, register.getId());
 			prepStatement.setString(2, register.getFirstName());
 			prepStatement.setString(3, register.getLastName());
@@ -62,29 +59,25 @@ public class UserRepositoryImpl implements UserRepository {
 					PasswordUtils.getSalt(30));
 			prepStatement.setString(6, encryptPassword);
 			int result = prepStatement.executeUpdate();
+			prepStatement.close();
 			if (result > 0) {
+				System.out.println("reg hash: " + connection.hashCode());
 				Login login = new Login(register.getEmail(), encryptPassword, register.getId(),
 						ROLE.values()[new Random().nextInt(2)]);
-				try {
-					connection.wait();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
 				String status = loginRepository.addCredentials(login);
 				System.out.println("reg status: " + status);
-				if (status == "success") {
+				if (status.equals("success")) {
 					System.out.println("reg: exe...");
-					connection.commit();
+					prepStatement.getConnection().commit();
 					System.out.println("reg: exeted...");
 					return "success";
 				} else {
-					connection.rollback();
+					prepStatement.getConnection().rollback();
 					return "fail";
 				}
 
 			} else {
-				connection.rollback();
+				prepStatement.getConnection().rollback();
 				return "fail";
 			}
 
@@ -95,13 +88,7 @@ public class UserRepositoryImpl implements UserRepository {
 				e1.printStackTrace();
 			}
 			e.printStackTrace();
-		} finally {
-			try {
-				connection.close();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+
 		}
 		return "fail";
 	}
