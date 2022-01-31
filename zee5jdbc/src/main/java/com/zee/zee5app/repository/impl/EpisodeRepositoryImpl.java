@@ -1,6 +1,5 @@
 package com.zee.zee5app.repository.impl;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,30 +8,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 import com.zee.zee5app.dto.Episode;
 import com.zee.zee5app.dto.Series;
 import com.zee.zee5app.exception.IdNotFoundException;
 import com.zee.zee5app.exception.InvalidIdLengthException;
 import com.zee.zee5app.repository.EpisodeRepository;
 import com.zee.zee5app.repository.SeriesRepository;
-import com.zee.zee5app.utils.DBUtils;
 
+@Repository
 public class EpisodeRepositoryImpl implements EpisodeRepository {
 
-	private static EpisodeRepository episodeRepository = null;
-	private DBUtils dbutils = null;
-	private SeriesRepository seriesRepository = null;
+	@Autowired
+	DataSource dataSource;
 
-	private EpisodeRepositoryImpl() throws IOException {
-		dbutils = DBUtils.getInstance();
-		seriesRepository = SeriesRepositoryImpl.getInstance();
-	}
-
-	public static EpisodeRepository getInstance() throws IOException {
-		if (episodeRepository == null)
-			episodeRepository = new EpisodeRepositoryImpl();
-		return episodeRepository;
-	}
+	@Autowired
+	SeriesRepository seriesRepository;
 
 	@Override
 	public String addEpisode(Episode episode) throws IdNotFoundException {
@@ -43,7 +38,13 @@ public class EpisodeRepositoryImpl implements EpisodeRepository {
 			e2.printStackTrace();
 			throw new IdNotFoundException("Invalid Serial Id");
 		}
-		Connection connection = dbutils.getConnection();
+
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
 		String insertQuery = "INSERT INTO episode " + "(epiId, serialId, episodename, epilength, location) "
 				+ "VALUES (?,?,?,?,?)";
 
@@ -76,15 +77,19 @@ public class EpisodeRepositoryImpl implements EpisodeRepository {
 				e1.printStackTrace();
 			}
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 		return "fail";
 	}
 
 	@Override
 	public String updateEpisodeById(String id, Episode episode) throws IdNotFoundException {
-		Connection connection = dbutils.getConnection();
+
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
 		String insertQuery = "UPDATE episode SET " + "episodename=?, epilength=?, location=? " + "WHERE epiId=?";
 
 		PreparedStatement ps;
@@ -113,8 +118,6 @@ public class EpisodeRepositoryImpl implements EpisodeRepository {
 				e1.printStackTrace();
 			}
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 		return "fail";
 	}
@@ -131,7 +134,12 @@ public class EpisodeRepositoryImpl implements EpisodeRepository {
 			e2.printStackTrace();
 			throw new IdNotFoundException("Invalid Serial Id");
 		}
-		Connection connection = dbutils.getConnection();
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
 		String delQuery = "DELETE FROM episode where epiId=?";
 		try {
 
@@ -141,8 +149,8 @@ public class EpisodeRepositoryImpl implements EpisodeRepository {
 			if (result > 0) {
 				try {
 					series.setNoofepisodes(series.getNoofepisodes() - 1);
-					return SeriesRepositoryImpl.getInstance().updateSeriesById(episode.get().getSerialId(), series);
-				} catch (IdNotFoundException | IOException e) {
+					return seriesRepository.updateSeriesById(episode.get().getSerialId(), series);
+				} catch (IdNotFoundException e) {
 					e.printStackTrace();
 				}
 			} else {
@@ -157,16 +165,18 @@ public class EpisodeRepositoryImpl implements EpisodeRepository {
 				e1.printStackTrace();
 			}
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 		return "fail";
 	}
 
 	@Override
 	public Optional<Episode> getEpisodeById(String id) throws IdNotFoundException, InvalidIdLengthException {
-		Connection connection = dbutils.getConnection();
-
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
 		String getQuery = "SELECT * FROM episode where epiId=?";
 
 		try {
@@ -188,8 +198,6 @@ public class EpisodeRepositoryImpl implements EpisodeRepository {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 
 		return Optional.empty();
@@ -198,7 +206,12 @@ public class EpisodeRepositoryImpl implements EpisodeRepository {
 	@Override
 	public List<Episode> getAllEpisodeList() throws InvalidIdLengthException {
 		List<Episode> episodes = new ArrayList<>();
-		Connection connection = dbutils.getConnection();
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
 
 		String getQuery = "SELECT * FROM episode";
 		try {
@@ -216,8 +229,6 @@ public class EpisodeRepositoryImpl implements EpisodeRepository {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 		return episodes;
 	}

@@ -1,6 +1,5 @@
 package com.zee.zee5app.repository.impl;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -10,31 +9,31 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 import com.zee.zee5app.dto.Series;
 import com.zee.zee5app.dto.enums.GENRE;
 import com.zee.zee5app.dto.enums.LANGUAGE;
 import com.zee.zee5app.exception.IdNotFoundException;
 import com.zee.zee5app.exception.InvalidIdLengthException;
 import com.zee.zee5app.repository.SeriesRepository;
-import com.zee.zee5app.utils.DBUtils;
 
+@Repository
 public class SeriesRepositoryImpl implements SeriesRepository {
-	private static SeriesRepository seriesRepository = null;
-	private DBUtils dbutils = null;
-
-	private SeriesRepositoryImpl() throws IOException {
-		dbutils = DBUtils.getInstance();
-	}
-
-	public static SeriesRepository getInstance() throws IOException {
-		if (seriesRepository == null)
-			seriesRepository = new SeriesRepositoryImpl();
-		return seriesRepository;
-	}
+	@Autowired
+	DataSource dataSource;
 
 	@Override
 	public String addSeries(Series series) {
-		Connection connection = dbutils.getConnection();
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e2) {
+			e2.printStackTrace();
+		}
 		String insertQuery = "INSERT INTO series "
 				+ "(id, agelimit, genre, length, releaseDate, cast, language, noofepisodes) "
 				+ "VALUES (?,?,?,?,?,?,?,?)";
@@ -68,15 +67,18 @@ public class SeriesRepositoryImpl implements SeriesRepository {
 				e1.printStackTrace();
 			}
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 		return "fail";
 	}
 
 	@Override
 	public String updateSeriesById(String id, Series series) throws IdNotFoundException {
-		Connection connection = dbutils.getConnection();
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e2) {
+			e2.printStackTrace();
+		}
 		String insertQuery = "UPDATE series SET agelimit = ?, genre = ?, length = ?, "
 				+ "releaseDate = ?, cast = ?, language = ?, noofepisodes = ? where id = ?";
 
@@ -109,15 +111,18 @@ public class SeriesRepositoryImpl implements SeriesRepository {
 				e1.printStackTrace();
 			}
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 		return "fail";
 	}
 
 	@Override
 	public String deleteSeriesById(String id) throws IdNotFoundException {
-		Connection connection = dbutils.getConnection();
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e2) {
+			e2.printStackTrace();
+		}
 		String delQuery = "DELETE FROM series where id=?";
 		try {
 			PreparedStatement prepStatement = connection.prepareStatement(delQuery);
@@ -138,16 +143,18 @@ public class SeriesRepositoryImpl implements SeriesRepository {
 				e1.printStackTrace();
 			}
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 		return "fail";
 	}
 
 	@Override
 	public Optional<Series> getSeriesById(String id) throws IdNotFoundException, InvalidIdLengthException {
-		Connection connection = dbutils.getConnection();
-
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e2) {
+			e2.printStackTrace();
+		}
 		String getQuery = "SELECT * FROM series where id=?";
 
 		try {
@@ -171,8 +178,6 @@ public class SeriesRepositoryImpl implements SeriesRepository {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 
 		return Optional.empty();
@@ -181,8 +186,17 @@ public class SeriesRepositoryImpl implements SeriesRepository {
 	@Override
 	public List<Series> getAllSeriesList() throws InvalidIdLengthException {
 		List<Series> seriess = new ArrayList<>();
-		Connection connection = dbutils.getConnection();
-
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e2) {
+			e2.printStackTrace();
+		}
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e2) {
+			e2.printStackTrace();
+		}
 		String getQuery = "SELECT * FROM series";
 		try {
 			PreparedStatement prepStatement = connection.prepareStatement(getQuery);
@@ -202,8 +216,6 @@ public class SeriesRepositoryImpl implements SeriesRepository {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 		return seriess;
 	}

@@ -1,29 +1,21 @@
 package com.zee.zee5app.service.impl;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.zee.zee5app.dto.Series;
 import com.zee.zee5app.exception.IdNotFoundException;
 import com.zee.zee5app.exception.InvalidIdLengthException;
 import com.zee.zee5app.repository.SeriesRepository;
-import com.zee.zee5app.repository.impl.SeriesRepositoryImpl;
 import com.zee.zee5app.service.SeriesService;
 
+@Service
 public class SeriesServiceImpl implements SeriesService {
-	private SeriesRepository seriesRepository = null;
-	private static SeriesService seriesService = null;
-
-	private SeriesServiceImpl() throws IOException {
-		seriesRepository = SeriesRepositoryImpl.getInstance();
-	}
-
-	public static SeriesService getInstance() throws IOException {
-		if (seriesService == null)
-			seriesService = new SeriesServiceImpl();
-		return seriesService;
-	}
+	@Autowired
+	private SeriesRepository seriesRepository;
 
 	@Override
 	public String addSeries(Series series) {

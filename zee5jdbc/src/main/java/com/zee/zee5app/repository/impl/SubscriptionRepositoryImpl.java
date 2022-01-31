@@ -1,6 +1,5 @@
 package com.zee.zee5app.repository.impl;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -10,6 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 import com.zee.zee5app.dto.Subscription;
 import com.zee.zee5app.dto.enums.PLAN_AUTORENEWAL;
 import com.zee.zee5app.dto.enums.PLAN_STATUS;
@@ -18,27 +22,22 @@ import com.zee.zee5app.exception.IdNotFoundException;
 import com.zee.zee5app.exception.InvalidAmountException;
 import com.zee.zee5app.exception.InvalidIdLengthException;
 import com.zee.zee5app.repository.SubscriptionRepository;
-import com.zee.zee5app.utils.DBUtils;
 
+@Repository
 public class SubscriptionRepositoryImpl implements SubscriptionRepository {
 
-	private static SubscriptionRepositoryImpl subscriptionRepository = null;
-	private DBUtils dbutils = null;
-
-	private SubscriptionRepositoryImpl() throws IOException {
-		dbutils = DBUtils.getInstance();
-	}
-
-	public static SubscriptionRepositoryImpl getInstance() throws IOException {
-		if (subscriptionRepository == null)
-			subscriptionRepository = new SubscriptionRepositoryImpl();
-		return subscriptionRepository;
-	}
+	@Autowired
+	DataSource dataSource;
 
 	@Override
 	public String addSubscription(Subscription subscription) {
 
-		Connection connection = dbutils.getConnection();
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e2) {
+			e2.printStackTrace();
+		}
 		String insertQuery = "INSERT INTO subscription "
 				+ "(id, dop, expiry, amount, status, type, autorenewal, regId) " + "VALUES (?,?,?,?,?,?,?,?)";
 
@@ -71,15 +70,18 @@ public class SubscriptionRepositoryImpl implements SubscriptionRepository {
 				e1.printStackTrace();
 			}
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 		return "fail";
 	}
 
 	@Override
 	public String updateSubscriptionById(String id, Subscription subscription) throws IdNotFoundException {
-		Connection connection = dbutils.getConnection();
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e2) {
+			e2.printStackTrace();
+		}
 		String updateQuery = "UPDATE subscription SET "
 				+ "dop = ?, expiry = ?, amount = ?, status = ?, type = ?, autorenewal = ?, regId = ? " + "where id = ?";
 
@@ -113,15 +115,18 @@ public class SubscriptionRepositoryImpl implements SubscriptionRepository {
 				e1.printStackTrace();
 			}
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 		return "fail";
 	}
 
 	@Override
 	public String deleteSubscriptionById(String id) throws IdNotFoundException {
-		Connection connection = dbutils.getConnection();
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e2) {
+			e2.printStackTrace();
+		}
 		String delQuery = "DELETE FROM subscription where id=?";
 		try {
 			PreparedStatement prepStatement = connection.prepareStatement(delQuery);
@@ -142,8 +147,6 @@ public class SubscriptionRepositoryImpl implements SubscriptionRepository {
 				e1.printStackTrace();
 			}
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 		return "fail";
 	}
@@ -151,7 +154,12 @@ public class SubscriptionRepositoryImpl implements SubscriptionRepository {
 	@Override
 	public Optional<Subscription> getSubscriptionById(String id)
 			throws IdNotFoundException, InvalidIdLengthException, InvalidAmountException {
-		Connection connection = dbutils.getConnection();
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
 
 		String getQuery = "SELECT * FROM subscription where id=?";
 
@@ -176,17 +184,19 @@ public class SubscriptionRepositoryImpl implements SubscriptionRepository {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
-
 		return Optional.empty();
 	}
 
 	@Override
 	public List<Subscription> getAllSubscriptionsList() throws InvalidIdLengthException, InvalidAmountException {
 		List<Subscription> subscriptions = new ArrayList<>();
-		Connection connection = dbutils.getConnection();
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
 
 		String getQuery = "SELECT * FROM subscription";
 		try {
@@ -207,8 +217,6 @@ public class SubscriptionRepositoryImpl implements SubscriptionRepository {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 
 		return subscriptions;
@@ -220,70 +228,4 @@ public class SubscriptionRepositoryImpl implements SubscriptionRepository {
 		return subscriptions.toArray(new Subscription[subscriptions.size()]);
 	}
 
-	public static void main(String[] args) {
-		SubscriptionRepository subscriptionRepository = null;
-		try {
-			subscriptionRepository = SubscriptionRepositoryImpl.getInstance();
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		// Adding an object
-		System.out.println("Adding SUB0000006: ");
-		try {
-			System.out.println(subscriptionRepository
-					.addSubscription(new Subscription("SUB0000006", new java.util.Date(), new java.util.Date(), 400,
-							PLAN_STATUS.active, PLAN_TYPE.monthly, PLAN_AUTORENEWAL.yes, "ZEE0000001")));
-		} catch (InvalidAmountException | InvalidIdLengthException e) {
-			e.printStackTrace();
-		}
-
-		// Fetching an object
-		System.out.println("Fetching SUB0000006: ");
-		try {
-			System.out.println(subscriptionRepository.getSubscriptionById("SUB0000006").isPresent());
-		} catch (InvalidIdLengthException | InvalidAmountException | IdNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		// Modifying an object
-		System.out.println("Updating SUB0000006: ");
-		try {
-			System.out.println(subscriptionRepository.updateSubscriptionById("SUB0000006",
-					new Subscription("SUB0000006", new java.util.Date(), new java.util.Date(), 400,
-							PLAN_STATUS.inactive, PLAN_TYPE.annual, PLAN_AUTORENEWAL.yes, "ZEE0000001")));
-		} catch (InvalidAmountException | InvalidIdLengthException | IdNotFoundException e) {
-			e.printStackTrace();
-		}
-
-		// Delete an object
-		System.out.println("Updating SUB0000006: ");
-		try {
-			System.out.println(subscriptionRepository.deleteSubscriptionById("SUB0000006"));
-		} catch (IdNotFoundException e) {
-			e.printStackTrace();
-		}
-
-		// Fetch all subscriptions as list
-		System.out.println("Subscription List:");
-		try {
-			subscriptionRepository.getAllSubscriptionsList().forEach((subscription) -> {
-				System.out.println(subscription);
-			});
-		} catch (InvalidIdLengthException | InvalidAmountException e) {
-			e.printStackTrace();
-		}
-
-		// Fetch all subscriptions as array
-		System.out.println("Subscription Array:");
-		try {
-			for (Subscription subscription : subscriptionRepository.getAllSubscriptions())
-				System.out.println(subscription);
-		} catch (InvalidIdLengthException | InvalidAmountException e) {
-			e.printStackTrace();
-		}
-
-	}
 }

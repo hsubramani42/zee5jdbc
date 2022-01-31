@@ -1,8 +1,10 @@
 package com.zee.zee5app.service.impl;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.zee.zee5app.dto.Movie;
 import com.zee.zee5app.exception.IdNotFoundException;
@@ -10,22 +12,12 @@ import com.zee.zee5app.exception.InvalidIdLengthException;
 import com.zee.zee5app.exception.InvalidNameException;
 import com.zee.zee5app.exception.NameNotFoundException;
 import com.zee.zee5app.repository.MovieRepository;
-import com.zee.zee5app.repository.impl.MovieRepositoryImpl;
 import com.zee.zee5app.service.MovieService;
 
+@Service
 public class MovieServiceImpl implements MovieService {
-	private MovieRepository movieRepository = null;
-	private static MovieService movieService = null;
-
-	private MovieServiceImpl() throws IOException {
-		movieRepository = MovieRepositoryImpl.getInstance();
-	}
-
-	public static MovieService getInstance() throws IOException {
-		if (movieService == null)
-			movieService = new MovieServiceImpl();
-		return movieService;
-	}
+	@Autowired
+	private MovieRepository movieRepository;
 
 	@Override
 	public String addMovie(Movie movie) {

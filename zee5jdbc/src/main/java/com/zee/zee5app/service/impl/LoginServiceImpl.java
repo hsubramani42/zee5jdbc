@@ -1,29 +1,20 @@
 package com.zee.zee5app.service.impl;
 
-import java.io.IOException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.zee.zee5app.dto.Login;
 import com.zee.zee5app.dto.enums.ROLE;
 import com.zee.zee5app.repository.LoginRepository;
-import com.zee.zee5app.repository.impl.LoginRepositoryImpl;
 import com.zee.zee5app.service.LoginService;
 
+@Service
 public class LoginServiceImpl implements LoginService {
 
-	private static LoginService loginService = null;
-
+	@Autowired
 	private LoginRepository loginRepository = null;
 
-	private LoginServiceImpl() throws IOException {
-		loginRepository = LoginRepositoryImpl.getInstance();
-	}
-
-	public static LoginService getInstance() throws IOException {
-		if (loginService == null)
-			loginService = new LoginServiceImpl();
-		return loginService;
-	}
-
+	
 	@Override
 	public String addCredentials(Login login) {
 		return this.loginRepository.addCredentials(login);

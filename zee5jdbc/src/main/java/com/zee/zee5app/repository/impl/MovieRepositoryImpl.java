@@ -1,6 +1,5 @@
 package com.zee.zee5app.repository.impl;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -10,6 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 import com.zee.zee5app.dto.Movie;
 import com.zee.zee5app.dto.enums.GENRE;
 import com.zee.zee5app.dto.enums.LANGUAGE;
@@ -18,27 +22,21 @@ import com.zee.zee5app.exception.InvalidIdLengthException;
 import com.zee.zee5app.exception.InvalidNameException;
 import com.zee.zee5app.exception.NameNotFoundException;
 import com.zee.zee5app.repository.MovieRepository;
-import com.zee.zee5app.utils.DBUtils;
 
+@Repository
 public class MovieRepositoryImpl implements MovieRepository {
 
-	private static MovieRepository movieRepository = null;
-
-	private DBUtils dbutils = null;
-
-	private MovieRepositoryImpl() throws IOException {
-		dbutils = DBUtils.getInstance();
-	}
-
-	public static MovieRepository getInstance() throws IOException {
-		if (movieRepository == null)
-			movieRepository = new MovieRepositoryImpl();
-		return movieRepository;
-	}
+	@Autowired
+	DataSource dataSource;
 
 	@Override
 	public String addMovie(Movie movie) {
-		Connection connection = dbutils.getConnection();
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e2) {
+			e2.printStackTrace();
+		}
 		String insertQuery = "INSERT INTO movie "
 				+ "(id, name, agelimit, genre, length, releaseDate, cast, language, trailer) "
 				+ "VALUES (?,?,?,?,?,?,?,?,?)";
@@ -73,15 +71,18 @@ public class MovieRepositoryImpl implements MovieRepository {
 				e1.printStackTrace();
 			}
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 		return "fail";
 	}
 
 	@Override
 	public String updateMovieById(String id, Movie movie) throws IdNotFoundException {
-		Connection connection = dbutils.getConnection();
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e2) {
+			e2.printStackTrace();
+		}
 		String insertQuery = "UPDATE movie SET name = ?, agelimit = ?, genre = ?, length = ?, "
 				+ "releaseDate = ?, cast = ?, language = ?, trailer = ? where id = ?";
 
@@ -115,15 +116,18 @@ public class MovieRepositoryImpl implements MovieRepository {
 				e1.printStackTrace();
 			}
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 		return "fail";
 	}
 
 	@Override
 	public String deleteMovieById(String id) throws IdNotFoundException {
-		Connection connection = dbutils.getConnection();
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e2) {
+			e2.printStackTrace();
+		}
 		String delQuery = "DELETE FROM movie where id=?";
 		try {
 			PreparedStatement prepStatement = connection.prepareStatement(delQuery);
@@ -144,8 +148,6 @@ public class MovieRepositoryImpl implements MovieRepository {
 				e1.printStackTrace();
 			}
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 		return "fail";
 	}
@@ -153,8 +155,12 @@ public class MovieRepositoryImpl implements MovieRepository {
 	@Override
 	public Optional<Movie> getMovieById(String id)
 			throws IdNotFoundException, InvalidIdLengthException, InvalidNameException {
-		Connection connection = dbutils.getConnection();
-
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e2) {
+			e2.printStackTrace();
+		}
 		String getQuery = "SELECT * FROM movie where id=?";
 
 		try {
@@ -179,8 +185,6 @@ public class MovieRepositoryImpl implements MovieRepository {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 
 		return Optional.empty();
@@ -189,8 +193,12 @@ public class MovieRepositoryImpl implements MovieRepository {
 	@Override
 	public List<Movie> getAllMoviesList() throws InvalidIdLengthException, InvalidNameException {
 		List<Movie> movies = new ArrayList<>();
-		Connection connection = dbutils.getConnection();
-
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e2) {
+			e2.printStackTrace();
+		}
 		String getQuery = "SELECT * FROM movie";
 		try {
 			PreparedStatement prepStatement = connection.prepareStatement(getQuery);
@@ -211,8 +219,6 @@ public class MovieRepositoryImpl implements MovieRepository {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 		return movies;
 	}
@@ -227,8 +233,12 @@ public class MovieRepositoryImpl implements MovieRepository {
 	public List<Movie> getMovieByName(String name)
 			throws NameNotFoundException, InvalidIdLengthException, InvalidNameException {
 		List<Movie> movies = new ArrayList<>();
-		Connection connection = dbutils.getConnection();
-
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e2) {
+			e2.printStackTrace();
+		}
 		String getQuery = "SELECT * FROM movie WHERE name=?";
 		try {
 			PreparedStatement prepStatement = connection.prepareStatement(getQuery);
@@ -250,8 +260,6 @@ public class MovieRepositoryImpl implements MovieRepository {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-		} finally {
-			dbutils.closeConnection(connection);
 		}
 		return movies;
 	}

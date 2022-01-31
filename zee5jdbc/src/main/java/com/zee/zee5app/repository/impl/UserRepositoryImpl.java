@@ -11,6 +11,11 @@ import java.util.Optional;
 import java.util.Random;
 
 import javax.naming.InvalidNameException;
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import com.zee.zee5app.dto.Login;
 import com.zee.zee5app.dto.Register;
@@ -24,28 +29,26 @@ import com.zee.zee5app.repository.UserRepository;
 import com.zee.zee5app.utils.DBUtils;
 import com.zee.zee5app.utils.PasswordUtils;
 
+@Repository
 public class UserRepositoryImpl implements UserRepository {
-	static private UserRepository repo = null;
-	static private DBUtils dbutils = null;
-	static private LoginRepository loginRepository = null;
 
-	private UserRepositoryImpl() throws IOException {
-		loginRepository = LoginRepositoryImpl.getInstance();
-		dbutils = DBUtils.getInstance();
-	}
+	@Autowired
+	DataSource dataSource;
 
-	public static UserRepository getInstance() throws IOException {
-
-		if (repo == null)
-			repo = new UserRepositoryImpl();
-		return repo;
-
-	}
+	@Autowired
+	LoginRepository loginRepository;
 
 	@Override
 	public String addUser(Register register) {
 
-		Connection connection = dbutils.getConnection();
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+			System.out.println("reg: " + connection.hashCode());
+		} catch (SQLException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
 		String insertQuery = "insert into register" + "(regId, firstname, lastname, email, contactnumber, password)"
 				+ "values(?,?,?,?,?,?)";
 		try {
@@ -62,7 +65,23 @@ public class UserRepositoryImpl implements UserRepository {
 			if (result > 0) {
 				Login login = new Login(register.getEmail(), encryptPassword, register.getId(),
 						ROLE.values()[new Random().nextInt(2)]);
-				return loginRepository.addCredentials(login);
+				try {
+					connection.wait();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				String status = loginRepository.addCredentials(login);
+				System.out.println("reg status: " + status);
+				if (status == "success") {
+					System.out.println("reg: exe...");
+					connection.commit();
+					System.out.println("reg: exeted...");
+					return "success";
+				} else {
+					connection.rollback();
+					return "fail";
+				}
 
 			} else {
 				connection.rollback();
@@ -73,12 +92,16 @@ public class UserRepositoryImpl implements UserRepository {
 			try {
 				connection.rollback();
 			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 			e.printStackTrace();
 		} finally {
-			dbutils.closeConnection(connection);
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		return "fail";
 	}
@@ -87,7 +110,13 @@ public class UserRepositoryImpl implements UserRepository {
 	public Optional<Register> getUserById(String id) throws InvalidNameException, IdNotFoundException,
 			InvalidIdLengthException, InvalidEmailFormatException, InvalidPasswordException {
 
-		Connection connection = dbutils.getConnection();
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 
 		String getQuery = "SELECT * FROM register where regId=?";
 		try {
@@ -110,7 +139,7 @@ public class UserRepositoryImpl implements UserRepository {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			dbutils.closeConnection(connection);
+
 		}
 
 		return Optional.empty();
@@ -122,7 +151,13 @@ public class UserRepositoryImpl implements UserRepository {
 
 	{
 		List<Register> registers = new ArrayList<>();
-		Connection connection = dbutils.getConnection();
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 
 		String getQuery = "SELECT * FROM register";
 		try {
@@ -142,7 +177,7 @@ public class UserRepositoryImpl implements UserRepository {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
-			dbutils.closeConnection(connection);
+
 		}
 
 		return Optional.ofNullable(registers);
@@ -159,7 +194,13 @@ public class UserRepositoryImpl implements UserRepository {
 
 	@Override
 	public String deleteUserById(String id) throws IdNotFoundException {
-		Connection connection = dbutils.getConnection();
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
 		String delQuery = "DELETE FROM register where regId=?";
 		try {
 			PreparedStatement prepStatement = connection.prepareStatement(delQuery);
@@ -181,14 +222,20 @@ public class UserRepositoryImpl implements UserRepository {
 			}
 			e.printStackTrace();
 		} finally {
-			dbutils.closeConnection(connection);
+
 		}
 		return "fail";
 	}
 
 	@Override
 	public String updateUserById(String id, Register register) throws IdNotFoundException {
-		Connection connection = dbutils.getConnection();
+		Connection connection = null;
+		try {
+			connection = dataSource.getConnection();
+		} catch (SQLException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
 		String updateQuery = "UPDATE register SET firstname=?, lastname=?, email=?, contactnumber=?, password=? WHERE regid=?";
 		try {
 			PreparedStatement prepStatement = connection.prepareStatement(updateQuery);
@@ -218,7 +265,7 @@ public class UserRepositoryImpl implements UserRepository {
 			}
 			e.printStackTrace();
 		} finally {
-			dbutils.closeConnection(connection);
+
 		}
 		return "fail";
 	}
